@@ -1,4 +1,4 @@
-# Simple brute force chess engine created by Frederick Andrews and inspired by .
+# Simple brute force chess engine created by Frederick Andrews and inspired by the Youtuber Sebastian Lague.
 
 <div align="center"style="font-size:30px;">
 
