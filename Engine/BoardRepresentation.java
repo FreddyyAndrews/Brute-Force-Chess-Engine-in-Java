@@ -3,8 +3,9 @@ import java.util.Map;
 
 public class BoardRepresentation {
     //Array to store Board representation
-    int[] squares = new int[64];
-    Piece piece = new Piece();
+    public static int[] squares = new int[64];
+    private static int[] colourValues = {8,16};
+    public static int colourToMove = colourValues[0];
 
     //Board Constructor with Fen given
     BoardRepresentation(String fen){
@@ -20,12 +21,12 @@ public class BoardRepresentation {
         //Map Char representation of pieces to numerical representation
         Map<Character, Integer> pieceMap = new HashMap<Character, Integer>();
         
-        pieceMap.put('k', piece.king);
-        pieceMap.put('n', piece.knight);
-        pieceMap.put('q', piece.queen);
-        pieceMap.put('p', piece.pawn);
-        pieceMap.put('b', piece.bishop);
-        pieceMap.put('r', piece.rook);
+        pieceMap.put('k', Piece.king);
+        pieceMap.put('n', Piece.knight);
+        pieceMap.put('q', Piece.queen);
+        pieceMap.put('p', Piece.pawn);
+        pieceMap.put('b', Piece.bishop);
+        pieceMap.put('r', Piece.rook);
 
         //Set File and Rank Before Iteration
         int file = 0;
@@ -42,13 +43,21 @@ public class BoardRepresentation {
                     file = file + jump;
                 } else {
                     //Determines piece type and colour from character
-                    int pieceColour = (Character.isUpperCase(fen.charAt(i))) ? piece.white : piece.black ;
+                    int pieceColour = (Character.isUpperCase(fen.charAt(i))) ? Piece.white : Piece.black ;
                     int pieceType = pieceMap.get(Character.toLowerCase(fen.charAt(i)));
                     //Adds piece to the board representation
                     squares[rank*8+file] = pieceType + pieceColour;
                     file++;
                 }
             }
+        }
+    }
+
+    static void switchTurn(){
+        if(colourToMove == 8){
+            colourToMove = colourValues[1];
+        }else {
+            colourToMove = colourValues[0];
         }
     }
 } 

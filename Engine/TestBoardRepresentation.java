@@ -2,8 +2,8 @@
 public class TestBoardRepresentation {
 
     public static void testFenStringLoading(){
-        BoardRepresentation board = new BoardRepresentation();
-        for(int piece : board.squares){
+        
+        for(int piece : BoardRepresentation.squares){
             System.out.println(piece);
         }
 
