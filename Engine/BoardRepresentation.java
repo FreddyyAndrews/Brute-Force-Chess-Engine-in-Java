@@ -9,13 +9,13 @@ public class BoardRepresentation {
     //Board Constructor with Fen given
     BoardRepresentation(String fen){
         loadPositionFromFenString(fen);
-        colourToMove = false;
+        
     }
 
     //Default Board constructor
     BoardRepresentation(){
-        loadPositionFromFenString("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
-        colourToMove = false;
+        loadPositionFromFenString("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w");
+        
     }
 
     public void loadPositionFromFenString(String fen) {
@@ -34,7 +34,11 @@ public class BoardRepresentation {
         int rank = 7;
 
         //Begins Iterating through chars in fen string
-        for(int i=0; i< fen.length(); i++) {
+        int i;
+        for(i=0; i< fen.length(); i++) {
+            if(fen.charAt(i) == ' '){
+                break;
+            }
             if(fen.charAt(i) == '/'){
                 file = 0;
                 rank--;
@@ -52,6 +56,16 @@ public class BoardRepresentation {
                 }
             }
         }
+
+        //Get turn
+        char turn = fen.charAt(i+1);
+        if(Character.toLowerCase(turn) == 'w'){
+            colourToMove = true;
+        }
+        else if (Character.toLowerCase(turn) == 'b'){
+            colourToMove = false;
+        }
+
     }
 
     public void switchTurn(){
@@ -72,39 +86,46 @@ public class BoardRepresentation {
         
         String returnVal ="";
         int counter = 0;
-        
+        int rank = 7;
         for (int i = 0; i<64; i++) {
 
+            
             int file = i%8;
             
-
-            if(squares[i] == 0) {
+            if(squares[rank*8+file] == 0) {
                 counter++;
             }else{
                 if(counter != 0){
                     returnVal = returnVal+counter;
                     counter = 0;
                 }
-                int piece = squares[i];
+                int piece = squares[rank*8+file];
                 if (Piece.isWhite(piece)){
                     piece = piece -8;
-                    returnVal = returnVal + Character.toLowerCase(pieceMap.get(piece));
+                    returnVal = returnVal + Character.toUpperCase(pieceMap.get(piece));
                 } else {
                     piece = piece -16;
-                    returnVal = returnVal + Character.toUpperCase(pieceMap.get(piece));
+                    returnVal = returnVal + Character.toLowerCase(pieceMap.get(piece));
                 }
             }
-            if(file ==7 && i != 63){
-
+            if(file ==7){
+                rank--;
                 if(counter != 0){
                     returnVal = returnVal+counter;
                     counter = 0;
                 }
-
-                returnVal = returnVal + "/";
-
+                if(i != 63) {
+                    returnVal = returnVal + "/";
+                }
+                
             }
             
+        }
+        
+        if(colourToMove){ //white's turn
+            returnVal = returnVal + " " + "w";
+        }else{ //Black's turn
+            returnVal = returnVal + " " + "b";
         }
         return returnVal;
     }

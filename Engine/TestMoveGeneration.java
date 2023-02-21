@@ -4,7 +4,7 @@ import java.util.Random;
 
 public class TestMoveGeneration {
 
-    private static void generateRandomMove() {
+    private static void generateRandomMoves() {
 
         PrecomputedMoveData dataFinder = new PrecomputedMoveData();
 
@@ -42,45 +42,10 @@ public class TestMoveGeneration {
 
         System.out.println(board.getFenString());
 
-        System.out.println("############################");
-
-        moves = moveGenerator.generateMoves();
-
-        rand = new Random();
-
-        n = rand.nextInt(moves.size());
-
-        System.out.println(board.colourToMove);
-
-        moveGenerator.doMove(moves.get(n));
-
-        System.out.println(moves.size());
-
-        System.out.println(board.getFenString());
-
-        System.out.println("############################");
-
-        moves = moveGenerator.generateMoves();
-
-        rand = new Random();
-
-        n = rand.nextInt(moves.size());
-
-        System.out.println(board.colourToMove);
-
-        moveGenerator.doMove(moves.get(n));
-
-        System.out.println(moves.size());
-
-        System.out.println(board.getFenString());
-
-
-
-
     }
     
     public static void main(String[] args){
-        generateRandomMove();
+        generateRandomMoves();
     }
     
 }

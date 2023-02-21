@@ -69,7 +69,7 @@ public class MoveGeneration {
 
                 //After capturing enemy piece can't move any further
 
-                if(!Piece.isColourToMove(pieceOnTargetSquare, board.colourToMove)){
+                if(!Piece.isColourToMove(pieceOnTargetSquare, board.colourToMove) && !Piece.isType(pieceOnTargetSquare, Piece.none)){
                     break;
                 }
 
