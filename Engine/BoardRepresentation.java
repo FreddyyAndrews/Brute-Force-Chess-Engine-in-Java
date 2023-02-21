@@ -3,21 +3,22 @@ import java.util.Map;
 
 public class BoardRepresentation {
     //Array to store Board representation
-    public static int[] squares = new int[64];
-    private static int[] colourValues = {8,16};
-    public static int colourToMove = colourValues[0];
+    public int[] squares = new int[64];
+    public boolean colourToMove;
 
     //Board Constructor with Fen given
     BoardRepresentation(String fen){
         loadPositionFromFenString(fen);
+        colourToMove = false;
     }
 
     //Default Board constructor
     BoardRepresentation(){
         loadPositionFromFenString("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
+        colourToMove = false;
     }
 
-    private void loadPositionFromFenString(String fen) {
+    public void loadPositionFromFenString(String fen) {
         //Map Char representation of pieces to numerical representation
         Map<Character, Integer> pieceMap = new HashMap<Character, Integer>();
         
@@ -53,11 +54,60 @@ public class BoardRepresentation {
         }
     }
 
-    static void switchTurn(){
-        if(colourToMove == 8){
-            colourToMove = colourValues[1];
-        }else {
-            colourToMove = colourValues[0];
-        }
+    public void switchTurn(){
+        colourToMove = !colourToMove;
     }
+
+    public String getFenString() {
+
+        Map<Integer, Character> pieceMap = new HashMap<Integer, Character>();
+        
+        pieceMap.put(Piece.king, 'k');
+        pieceMap.put(Piece.knight, 'n');
+        pieceMap.put(Piece.queen, 'q');
+        pieceMap.put(Piece.pawn, 'p');
+        pieceMap.put(Piece.bishop, 'b');
+        pieceMap.put(Piece.rook, 'r');
+
+        
+        String returnVal ="";
+        int counter = 0;
+        
+        for (int i = 0; i<64; i++) {
+
+            int file = i%8;
+            
+
+            if(squares[i] == 0) {
+                counter++;
+            }else{
+                if(counter != 0){
+                    returnVal = returnVal+counter;
+                    counter = 0;
+                }
+                int piece = squares[i];
+                if (Piece.isWhite(piece)){
+                    piece = piece -8;
+                    returnVal = returnVal + Character.toLowerCase(pieceMap.get(piece));
+                } else {
+                    piece = piece -16;
+                    returnVal = returnVal + Character.toUpperCase(pieceMap.get(piece));
+                }
+            }
+            if(file ==7 && i != 63){
+
+                if(counter != 0){
+                    returnVal = returnVal+counter;
+                    counter = 0;
+                }
+
+                returnVal = returnVal + "/";
+
+            }
+            
+        }
+        return returnVal;
+    }
+
+
 } 

@@ -16,4 +16,9 @@
 
 - The board setup can be initialized with a Fen String.
 
+- Move generation is currently working for sliding pieces, knights and the king.
+
+- Next I will be adding more movement features for pawns.
+
+
 ###### This project was writen in java 11.0.13 and began in 2023.
