@@ -65,7 +65,7 @@ public class MoveGeneration {
                     break;
                 }
 
-                moves.add(new Move(startSquare, targetSquare));
+                moves.add(new Move(startSquare, targetSquare, board.squares[startSquare]));
 
                 //After capturing enemy piece can't move any further
 
@@ -83,7 +83,7 @@ public class MoveGeneration {
         int pieceOnTargetSquare = board.squares[targetSquare];
 
         if((!Piece.isColourToMove(pieceOnTargetSquare, board.colourToMove)) || Piece.isType(pieceOnTargetSquare, Piece.none)){
-            moves.add(new Move(startSquare, targetSquare));
+            moves.add(new Move(startSquare, targetSquare, board.squares[startSquare]));
         }
     }
 
@@ -150,7 +150,7 @@ public class MoveGeneration {
                     break;
                 }
 
-                moves.add(new Move(startSquare, targetSquare));
+                moves.add(new Move(startSquare, targetSquare, board.squares[startSquare]));
 
                 //After capturing enemy piece can't move any further
 
@@ -163,16 +163,53 @@ public class MoveGeneration {
 
     }
 
+    private void addWhitePawnMove(int startSquare, int targetSquare){
+
+        if(targetSquare>55 && targetSquare < 64) {
+            for (int i = 3; i<7; i++){
+                moves.add(new Move(startSquare, targetSquare, Piece.white+i));
+            }
+        } else {
+            moves.add(new Move(startSquare, targetSquare, board.squares[startSquare]));
+        }
+    }
+
+    private void addBlackPawnMove(int startSquare, int targetSquare){
+
+        if(targetSquare>-1 && targetSquare < 8) {
+            for (int i = 3; i<7; i++){
+                moves.add(new Move(startSquare, targetSquare, Piece.black+i));
+            }
+        } else {
+            moves.add(new Move(startSquare, targetSquare, board.squares[startSquare]));
+        }
+    }
+    
+
     private void generatePawnMoves(int startSquare) {
         //White pawns
         if(board.colourToMove == true){
 
-            //Move forward
+            //Move one forward
             int targetSquare = startSquare + 8;
             int pieceOnTargetSquare = board.squares[targetSquare];
             //Checks that no piece blocks
             if (Piece.isType(pieceOnTargetSquare, Piece.none)){
-                moves.add(new Move(startSquare, targetSquare));
+
+                addWhitePawnMove(startSquare, targetSquare);
+                
+            }
+
+            //Logic for moving 2 forward
+            if(startSquare> 7 && startSquare<16){
+                targetSquare = startSquare + 16;
+                pieceOnTargetSquare = board.squares[targetSquare];
+                int pieceInbetween = board.squares[targetSquare-8];
+                if (Piece.isType(pieceOnTargetSquare, Piece.none) && Piece.isType(pieceInbetween, Piece.none)){
+                    moves.add(new Move(startSquare, targetSquare, board.squares[startSquare]));
+                    
+                }
+
             }
 
             //Left diagonal
@@ -182,7 +219,7 @@ public class MoveGeneration {
 
                 if((!Piece.isColourToMove(pieceOnTargetSquare, board.colourToMove)) && !Piece.isType(pieceOnTargetSquare, Piece.none)){
                     
-                    moves.add(new Move(startSquare, targetSquare));
+                    addWhitePawnMove(startSquare, targetSquare);
                     
                 }
             }
@@ -195,7 +232,7 @@ public class MoveGeneration {
 
                 if((!Piece.isColourToMove(pieceOnTargetSquare, board.colourToMove)) && !Piece.isType(pieceOnTargetSquare, Piece.none)){
                     
-                    moves.add(new Move(startSquare, targetSquare));
+                    addWhitePawnMove(startSquare, targetSquare);
                     
                 }
             }
@@ -211,17 +248,27 @@ public class MoveGeneration {
             int pieceOnTargetSquare = board.squares[targetSquare];
             //Checks that no piece blocks
             if (Piece.isType(pieceOnTargetSquare, Piece.none)){
-                moves.add(new Move(startSquare, targetSquare));
+                addBlackPawnMove(startSquare, targetSquare);
+            }
+            //Logic for move 2 forwards 
+            if(startSquare> 47 && startSquare<56){
+                targetSquare = startSquare - 16;
+                pieceOnTargetSquare = board.squares[targetSquare];
+                int pieceInbetween = board.squares[targetSquare+8];
+                if (Piece.isType(pieceOnTargetSquare, Piece.none) && Piece.isType(pieceInbetween, Piece.none)){
+                    moves.add(new Move(startSquare, targetSquare, board.squares[startSquare]));
+                    
+                }
+
             }
 
-            
             if(numSquaresToEdge[startSquare][5] != 0){
                 targetSquare = startSquare - 7;
                 pieceOnTargetSquare = board.squares[targetSquare];
 
                 if((!Piece.isColourToMove(pieceOnTargetSquare, board.colourToMove)) && !Piece.isType(pieceOnTargetSquare, Piece.none)){
                     
-                    moves.add(new Move(startSquare, targetSquare));
+                    addBlackPawnMove(startSquare, targetSquare);
                     
                 }
             }
@@ -234,7 +281,7 @@ public class MoveGeneration {
 
                 if((!Piece.isColourToMove(pieceOnTargetSquare, board.colourToMove)) && !Piece.isType(pieceOnTargetSquare, Piece.none)){
                     
-                    moves.add(new Move(startSquare, targetSquare));
+                    addBlackPawnMove(startSquare, targetSquare);
                     
                 }
             }
@@ -246,7 +293,7 @@ public class MoveGeneration {
     public void doMove(Move move){
         
         //Change value of target square and reset starting square
-        board.squares[move.getTargetSquare()] = board.squares[move.getStartSquare()];
+        board.squares[move.getTargetSquare()] = move.getNewPiece();
         board.squares[move.getStartSquare()] = 0;
         board.switchTurn();
 

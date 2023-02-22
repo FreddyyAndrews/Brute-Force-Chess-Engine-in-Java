@@ -5,6 +5,10 @@ public class BoardRepresentation {
     //Array to store Board representation
     public int[] squares = new int[64];
     public boolean colourToMove;
+    public boolean wqCastle;
+    public boolean wkCastle;
+    public boolean bkCastle;
+    public boolean bqCastle;
 
     //Board Constructor with Fen given
     BoardRepresentation(String fen){
