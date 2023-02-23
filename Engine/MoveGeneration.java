@@ -4,15 +4,16 @@ import java.util.ArrayList;
 public class MoveGeneration {
 
     //Offsets for piece movement
-    public static final int[] directionOffSets = {8,-8,-1,1,7,-7,9,-9};
-    public static final int[] knightDirectionOffsets = {16,2,-2,-16};
-    public static final int[] pawnDirectionOffsets = {7,8,9};
-
+    private static final int[] directionOffSets = {8,-8,-1,1,7,-7,9,-9};
+    
     //Instance Variables
     PrecomputedMoveData dataFinder;
     BoardRepresentation board;
-    public int[][] numSquaresToEdge; 
+    private int[][] numSquaresToEdge; 
     private ArrayList<Move> moves; 
+    private ArrayList<EnPassant> enPassants;
+    private ArrayList<Castle> castles;
+    
 
     //Constructor
     public MoveGeneration( PrecomputedMoveData dataFinder, BoardRepresentation board){
@@ -23,8 +24,18 @@ public class MoveGeneration {
 
     }
 
+    public ArrayList<EnPassant> getEnPassants(){
+        return enPassants;
+    }
+
+    public ArrayList<Castle> getCastles(){
+        return castles;
+    }
+
     public ArrayList<Move> generateMoves () {
         moves = new ArrayList<Move>();
+        enPassants =  new ArrayList<EnPassant>();
+        castles = new ArrayList<Castle>();
         for (int startSquare = 0; startSquare< 64; startSquare++){
             int piece = board.squares[startSquare];
             if (Piece.isColourToMove(piece, board.colourToMove)){
@@ -161,6 +172,39 @@ public class MoveGeneration {
             }
         }
 
+        //Generate Castles
+
+        if(board.wkCastle && board.colourToMove){
+            Castle castle = new Castle(4,6,7,5);
+            if(MoveGeneration.castleLegalityCheck(board, castle)){
+                castles.add(castle);
+            }
+        }
+        if(board.wqCastle && board.colourToMove){
+
+            Castle castle = new Castle(4,2,0,3);
+            if(MoveGeneration.castleLegalityCheck(board, castle)){
+                castles.add(castle);
+            }
+
+        }
+        if(board.bkCastle && !board.colourToMove){
+
+            Castle castle = new Castle(60,62,63,61);
+            if(MoveGeneration.castleLegalityCheck(board, castle)){
+                castles.add(castle);
+            }
+
+        }
+        if(board.bqCastle && !board.colourToMove){
+
+            Castle castle = new Castle(60,58,56,59);
+            if(MoveGeneration.castleLegalityCheck(board, castle)){
+                castles.add(castle);
+            }
+
+        }
+
     }
 
     private void addWhitePawnMove(int startSquare, int targetSquare){
@@ -184,7 +228,6 @@ public class MoveGeneration {
             moves.add(new Move(startSquare, targetSquare, board.squares[startSquare]));
         }
     }
-    
 
     private void generatePawnMoves(int startSquare) {
         //White pawns
@@ -222,6 +265,10 @@ public class MoveGeneration {
                     addWhitePawnMove(startSquare, targetSquare);
                     
                 }
+                //En Passant
+                if(targetSquare == board.enPassantSquare){
+                    enPassants.add(new EnPassant(startSquare, targetSquare, targetSquare-8));
+                }
             }
 
             //Right Diagonal
@@ -235,7 +282,15 @@ public class MoveGeneration {
                     addWhitePawnMove(startSquare, targetSquare);
                     
                 }
+                //En Passant
+                if(targetSquare == board.enPassantSquare){
+                    enPassants.add(new EnPassant(startSquare, targetSquare, targetSquare-8));
+                }
             }
+
+            
+
+
 
         }
 
@@ -261,7 +316,7 @@ public class MoveGeneration {
                 }
 
             }
-
+            //Diagonal
             if(numSquaresToEdge[startSquare][5] != 0){
                 targetSquare = startSquare - 7;
                 pieceOnTargetSquare = board.squares[targetSquare];
@@ -271,10 +326,12 @@ public class MoveGeneration {
                     addBlackPawnMove(startSquare, targetSquare);
                     
                 }
+                //En Passant
+                if(targetSquare == board.enPassantSquare){
+                    enPassants.add(new EnPassant(startSquare, targetSquare, targetSquare+8));
+                }
             }
-
-            //Right Diagonal
-
+            //Diagonal
             if(numSquaresToEdge[startSquare][7] != 0){
                 targetSquare = startSquare - 9;
                 pieceOnTargetSquare = board.squares[targetSquare];
@@ -284,6 +341,10 @@ public class MoveGeneration {
                     addBlackPawnMove(startSquare, targetSquare);
                     
                 }
+                //En Passant
+                if(targetSquare == board.enPassantSquare){
+                    enPassants.add(new EnPassant(startSquare, targetSquare, targetSquare+8));
+                }
             }
 
         }
@@ -291,11 +352,90 @@ public class MoveGeneration {
     }
 
     public void doMove(Move move){
+
+        //Fullmove clock
+        if(board.colourToMove == false){ //Black's turn
+            board.fullMoveClock = board.fullMoveClock + 1;
+        }
+        //Halfmove clock
+        if(!Piece.isType(board.squares[move.getStartSquare()], Piece.pawn) || !Piece.isType(board.squares[move.getTargetSquare()], Piece.none)){
+            board.halfMoveClock = board.halfMoveClock +1;
+        }else{
+            board.halfMoveClock = 0;
+        }
         
         //Change value of target square and reset starting square
         board.squares[move.getTargetSquare()] = move.getNewPiece();
         board.squares[move.getStartSquare()] = 0;
+
+        board.proccessCastlingRequirements();
+        
         board.switchTurn();
+
+    }
+
+    public void doEnPassant(EnPassant enPassant) {
+
+        //Fullmove clock
+        if(board.colourToMove == false){ //Black's turn
+            board.fullMoveClock = board.fullMoveClock + 1;
+        }
+        //Halfmove clock
+        board.halfMoveClock = 0;
+        
+        //Change value of target square and reset starting square
+        board.squares[enPassant.getTargetSquare()] = board.squares[enPassant.getStartSquare()];
+        board.squares[enPassant.getStartSquare()] = 0;
+        board.squares[enPassant.getTargetPieceSquare()] = 0;
+
+        board.proccessCastlingRequirements();
+        
+        board.switchTurn();
+
+    }
+
+    public void doCastle(Castle castle) {
+        //Fullmove clock
+        if(board.colourToMove == false){ //Black's turn
+            board.fullMoveClock = board.fullMoveClock + 1;
+        }
+        //Halfmove clock
+        board.halfMoveClock = board.halfMoveClock+1;
+        
+        //Change value of target square and reset starting square
+        board.squares[castle.getRookEndSquare()] = board.squares[castle.getRookStartSquare()];
+        board.squares[castle.getKingEndSquare()] = board.squares[castle.getKingStartSquare()];
+
+        board.squares[castle.getKingStartSquare()] = 0;
+        board.squares[castle.getRookStartSquare()] = 0;
+
+        board.proccessCastlingRequirements();
+        
+        board.switchTurn();
+    }
+
+    private static boolean castleLegalityCheck(BoardRepresentation board, Castle castle){ //Checks if castle goes through pieces or checks
+        
+        //Checking if there are peices between king and rook
+
+        if(castle.getKingStartSquare()> castle.getRookStartSquare()){
+            for(int i = 1; i< castle.getKingStartSquare(); i++){
+                if(!Piece.isType(board.squares[castle.getRookStartSquare()+i], Piece.none)){
+                    return false;
+                }
+            }
+        }
+
+        if(castle.getKingStartSquare() < castle.getRookStartSquare()){
+            for(int i = castle.getKingStartSquare(); i< castle.getRookStartSquare(); i++){
+                if(!Piece.isType(board.squares[castle.getKingStartSquare()+i], Piece.none)){
+                    return false;
+                }
+            }
+        }
+
+        return true;
+
 
     }
     

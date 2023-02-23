@@ -1,4 +1,4 @@
-# Simple brute force chess engine created by Frederick Andrews and inspired by the Youtuber Sebastian Lague.
+# Simple brute force chess engine created by Frederick Andrews.
 
 <div align="center"style="font-size:30px;">
 
@@ -16,9 +16,9 @@
 
 - The board setup can be initialized with a Fen String.
 
-- Move generation is currently working for sliding pieces, knights and the king.
+- Move generation is currently working for all moves and pseudolegal moves can be generated.
 
-- Next I will be adding more movement features for pawns.
+- The groundwork has been laid to begin working on the engine.
 
 
 ###### This project was writen in java 11.0.13 and began in 2023.

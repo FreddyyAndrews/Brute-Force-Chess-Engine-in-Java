@@ -9,6 +9,9 @@ public class BoardRepresentation {
     public boolean wkCastle;
     public boolean bkCastle;
     public boolean bqCastle;
+    public int enPassantSquare;
+    public int halfMoveClock;
+    public int fullMoveClock;
 
     //Board Constructor with Fen given
     BoardRepresentation(String fen){
@@ -37,39 +40,93 @@ public class BoardRepresentation {
         int file = 0;
         int rank = 7;
 
+        //Break fen up into parts
+
+        String[] fenSplited = fen.split("\\s+");
+
+
         //Begins Iterating through chars in fen string
-        int i;
-        for(i=0; i< fen.length(); i++) {
-            if(fen.charAt(i) == ' '){
-                break;
-            }
-            if(fen.charAt(i) == '/'){
+        for(int i=0; i< fenSplited[0].length(); i++) {
+            
+
+            if(fenSplited[0].charAt(i) == '/'){
                 file = 0;
                 rank--;
             } else {
-                if(Character.isDigit(fen.charAt(i))){
-                    int jump = Integer.parseInt(String.valueOf(fen.charAt(i)));
+                if(Character.isDigit(fenSplited[0].charAt(i))){
+                    int jump = Integer.parseInt(String.valueOf(fenSplited[0].charAt(i)));
                     file = file + jump;
                 } else {
                     //Determines piece type and colour from character
-                    int pieceColour = (Character.isUpperCase(fen.charAt(i))) ? Piece.white : Piece.black ;
-                    int pieceType = pieceMap.get(Character.toLowerCase(fen.charAt(i)));
+                    int pieceColour = (Character.isUpperCase(fenSplited[0].charAt(i))) ? Piece.white : Piece.black ;
+                    int pieceType = pieceMap.get(Character.toLowerCase(fenSplited[0].charAt(i)));
                     //Adds piece to the board representation
                     squares[rank*8+file] = pieceType + pieceColour;
                     file++;
                 }
             }
+            
         }
 
-        //Get turn
-        char turn = fen.charAt(i+1);
-        if(Character.toLowerCase(turn) == 'w'){
-            colourToMove = true;
-        }
-        else if (Character.toLowerCase(turn) == 'b'){
+        //Determine turn from fen
+        if(fenSplited[1].charAt(0) == 'w'){
+            colourToMove =true;
+        }else{
             colourToMove = false;
         }
 
+        //Default Castling availability to false
+        wqCastle=false;
+        wkCastle=false;
+        bkCastle=false;
+        bqCastle=false;
+
+        //Determine castling availability
+
+        for(int i=0; i < fenSplited[2].length();i++){
+
+            //Set white can castle king side
+            if(fenSplited[2].charAt(i)== 'K'){
+                wkCastle = true;
+            }
+            //Set Black and castle king side
+            if(fenSplited[2].charAt(i)== 'k'){
+                bkCastle = true;
+            }
+            //Set white can castle queen side
+            if(fenSplited[2].charAt(i)== 'Q'){
+                wqCastle = true;
+            }
+            //Set black can castle queen side
+            if(fenSplited[2].charAt(i)== 'q'){
+                bqCastle = true;
+            } 
+
+        }
+        //Verify that pieces are in right place for castling
+        proccessCastlingRequirements();
+
+        //En passant Square Info
+        if(!fenSplited[3].equals("-")){
+           
+            //Map letter to numerical value
+            Map<Character, Integer> fileMap = new HashMap<Character, Integer>();
+        
+            fileMap.put('a', 0);
+            fileMap.put('b', 1);
+            fileMap.put('c', 2);
+            fileMap.put('d', 3);
+            fileMap.put('e', 4);
+            fileMap.put('f', 5);
+            fileMap.put('g', 6);
+            fileMap.put('h', 7);
+            //Calculate En passant Square
+            enPassantSquare = fileMap.get(fenSplited[3].charAt(0)) + (Integer.parseInt(String.valueOf(fenSplited[3].charAt(1)))-1)*8;
+        }
+
+        //Set Half move and full move clock
+        halfMoveClock = Integer.parseInt(String.valueOf(fenSplited[4]));
+        fullMoveClock = Integer.parseInt(String.valueOf(fenSplited[5]));
     }
 
     public void switchTurn(){
@@ -131,7 +188,100 @@ public class BoardRepresentation {
         }else{ //Black's turn
             returnVal = returnVal + " " + "b";
         }
+        //Check if dash needed
+        boolean castleDashFlag = true;
+        //Add Castling Info
+        if(wkCastle){
+            castleDashFlag = false;
+            returnVal = returnVal + " " + "K";
+        }
+        if(wqCastle){
+            castleDashFlag = false;
+            if(castleDashFlag){
+                returnVal = returnVal + " " + "Q";
+            }else{
+                returnVal = returnVal +  "Q";
+            }
+            
+        }
+        if(bkCastle){
+            castleDashFlag = false;
+            if(castleDashFlag){
+                returnVal = returnVal + " " + "k";
+            }else{
+                returnVal = returnVal +  "k";
+            }
+        }
+        if(bqCastle){
+            castleDashFlag = false;
+            if(castleDashFlag){
+                returnVal = returnVal + " " + "q";
+            }else{
+                returnVal = returnVal +  "q";
+            }
+        }
+        if(castleDashFlag){
+            returnVal = returnVal + " -";
+        }
+
+        //Add en Passant Info
+
+        if(enPassantSquare != 0){
+            //Convert int to letter-number representation
+
+            Map<Integer, Character> fileMap = new HashMap<Integer, Character>();
+        
+            fileMap.put(0, 'a');
+            fileMap.put(1, 'b');
+            fileMap.put(2, 'c');
+            fileMap.put(3, 'd');
+            fileMap.put(4, 'e');
+            fileMap.put(5, 'f');
+            fileMap.put(6, 'g');
+            fileMap.put(7, 'h');
+
+            int enPassantFile = enPassantSquare % 8;
+            char enPassantFileLetter = fileMap.get(enPassantFile);
+            int enPassantRank = (enPassantSquare - enPassantFile)/8;
+
+            returnVal = returnVal + (" " + enPassantFileLetter) + enPassantRank;
+
+        }else{
+            returnVal = returnVal + " -";
+        }
+
+        returnVal = returnVal + " " + halfMoveClock;
+        returnVal = returnVal + " " + fullMoveClock;
+
         return returnVal;
+    }
+
+    public void proccessCastlingRequirements(){
+
+        if(squares[0] != 13){ //Queen side white rook
+            wqCastle = false;
+        }
+        if(squares[0] != 13){ //King side white rook
+            wkCastle = false;
+        }
+        if(squares[4] != 9){ //White king
+            wqCastle = false;
+            wkCastle = false;
+        }
+
+        if(squares[56] != 21){ //Queen side black rook
+            bqCastle = false;
+        }
+        if(squares[63] != 21){ //King side black rook
+            bkCastle = false;
+        }
+        if(squares[60] != 17){ //black king
+            bqCastle = false;
+            bkCastle = false;
+        }
+
+
+
     }
 
 
