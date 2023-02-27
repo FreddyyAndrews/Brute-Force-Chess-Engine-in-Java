@@ -1,7 +1,7 @@
 import java.util.HashMap;
 import java.util.Map;
 
-public class BoardRepresentation {
+public class BoardRepresentation implements Cloneable{
     //Array to store Board representation
     public int[] squares = new int[64];
     public boolean colourToMove;
@@ -24,6 +24,10 @@ public class BoardRepresentation {
         loadPositionFromFenString("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w");
         
     }
+
+    public Object clone() throws CloneNotSupportedException{  
+        return super.clone();  
+    }    
 
     public void loadPositionFromFenString(String fen) {
         //Map Char representation of pieces to numerical representation

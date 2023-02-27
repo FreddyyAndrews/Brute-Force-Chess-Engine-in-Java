@@ -18,7 +18,7 @@ public class TestMoveGeneration {
 
         int n = rand.nextInt(moves.size());
 
-        moveGenerator.doMove(moves.get(n));
+        moveGenerator.playMove(moves.get(n));
 
         System.out.println(moves.size());
 
@@ -34,11 +34,30 @@ public class TestMoveGeneration {
 
         System.out.println(board.colourToMove);
 
-        moveGenerator.doMove(moves.get(n));
+        moveGenerator.playMove(moves.get(n));
 
         System.out.println(moves.size());
 
         System.out.println(board.getFenString());
+
+    }
+
+    private static void testLegalMoveGeneration(){
+
+        PrecomputedMoveData dataFinder = new PrecomputedMoveData();
+
+        BoardRepresentation board = new BoardRepresentation("3qk3/8/8/8/8/8/8/4K3 w - - 0 1");
+        
+        MoveGeneration moveGenerator = new MoveGeneration(dataFinder,board);
+        
+        moveGenerator.generateLegalMoves();
+
+        ArrayList<Move> moves = moveGenerator.getLegalMoves();
+
+        for(Move move: moves){
+            System.out.println(Move.toString(move));
+        }
+        System.out.println(moves.size());
 
     }
 
@@ -64,7 +83,7 @@ public class TestMoveGeneration {
             System.out.println(Move.toString(move));
         }
 
-        moveGenerator.doMove(moves.get(n));
+        moveGenerator.playMove(moves.get(n));
 
         System.out.println(board.getFenString());
     }
@@ -87,7 +106,7 @@ public class TestMoveGeneration {
 
         int n = rand.nextInt(enPassants.size());
 
-        moveGenerator.doEnPassant(enPassants.get(n));
+        moveGenerator.playEnPassant(enPassants.get(n));
 
         System.out.println(board.getFenString());
 
@@ -111,7 +130,7 @@ public class TestMoveGeneration {
 
         int n = rand.nextInt(castles.size());
 
-        moveGenerator.doCastle(castles.get(n));
+        moveGenerator.playCastle(castles.get(n));
 
         System.out.println(board.getFenString());
 
@@ -121,7 +140,8 @@ public class TestMoveGeneration {
         //generateRandomMoves();
         //testPawnPromotions();
         //testEnPassant();
-        testCastling();
+        //testCastling();
+        testLegalMoveGeneration();
 
     }
     

@@ -4,14 +4,15 @@ public class Move {
     private int targetSquare;
     private int newPiece;
     
-
+    
+    //Regular move
     public Move (int startSquare, int targetSquare, int newPiece) {
         this.startSquare = startSquare;
         this.targetSquare = targetSquare;
         this.newPiece = newPiece;
+        
     }
-
-
+    
     public int getStartSquare() {
         return startSquare;
     }

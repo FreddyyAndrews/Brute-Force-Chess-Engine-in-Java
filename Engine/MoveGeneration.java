@@ -1,7 +1,7 @@
 import java.util.ArrayList;
 
 
-public class MoveGeneration {
+public class MoveGeneration  {
 
     //Offsets for piece movement
     private static final int[] directionOffSets = {8,-8,-1,1,7,-7,9,-9};
@@ -9,10 +9,17 @@ public class MoveGeneration {
     //Instance Variables
     PrecomputedMoveData dataFinder;
     BoardRepresentation board;
+    BoardRepresentation lastBoard;
     private int[][] numSquaresToEdge; 
+    //Moves
     private ArrayList<Move> moves; 
     private ArrayList<EnPassant> enPassants;
     private ArrayList<Castle> castles;
+    //Legal Moves
+    private ArrayList<Move> legalMoves; 
+    private ArrayList<EnPassant> legalEnPassants;
+    private ArrayList<Castle> legalCastles;
+
     
 
     //Constructor
@@ -20,6 +27,7 @@ public class MoveGeneration {
 
         this.dataFinder = dataFinder;
         this.board = board;
+        this.lastBoard = board;
         numSquaresToEdge = dataFinder.numSquaresToEdge;
 
     }
@@ -30,6 +38,147 @@ public class MoveGeneration {
 
     public ArrayList<Castle> getCastles(){
         return castles;
+    }
+
+    public ArrayList<EnPassant> getLegalEnPassants(){
+        return legalEnPassants;
+    }
+
+    public ArrayList<Castle> getLegalCastles(){
+        return legalCastles;
+    }
+
+    public ArrayList<Move> getLegalMoves(){
+        return legalMoves;
+    }
+
+
+
+    //Generate legal moves and filter out moves that put king in check
+    public void generateLegalMoves (){
+        
+        //Generate all moves, moves are stored in instance ArrayLists
+        ArrayList<Move> moveTester = generateMoves(); //w
+        ArrayList<EnPassant> enPassantTester = enPassants;
+        ArrayList<Castle> castleTester = castles;
+
+        //Regular moves
+        legalMoves = new ArrayList<Move>();
+
+        //For ever move generated
+        for(Move move : moveTester){
+
+            //Start by assuming the move is legal
+            boolean moveLegal = true;
+
+            //Do the move do get the next position
+            doMove(move); //b
+
+            //For each returning opponent move
+            for(Move opMove : generateMoves()){//b
+
+                //if the move would capture the king then we know that the previous move was illegal
+                if(Piece.isType(board.squares[opMove.getTargetSquare()], Piece.king)){
+
+                    //Set move legality to false
+                    moveLegal = false;
+                    break;
+
+                }
+            }
+
+            //Add legal moves to legal moves
+            if(moveLegal){
+
+                legalMoves.add(move);
+
+            }
+
+            //Reset board
+            try{
+                board = (BoardRepresentation) lastBoard.clone();
+            }catch(CloneNotSupportedException e){
+    
+            }
+
+        }
+
+        //EnPassants
+
+        legalEnPassants = new ArrayList<EnPassant>();
+
+        for(EnPassant enPassant : enPassantTester){
+
+            //Start by assuming the enpassant is legal
+            boolean moveLegal = true;
+
+            //Do the move do get the next position
+            doEnPassant(enPassant);
+
+            //For each returning opponent move
+            for(Move opMove : generateMoves()){
+
+                //if the move would capture the king then we know that the previous move was illegal
+                if(Piece.isType(board.squares[opMove.getTargetSquare()], Piece.king)){
+
+                    //Set move legality to false
+                    moveLegal = false;
+
+                }
+            }
+
+            //Add legal enpassant to legal enpassants
+            if(moveLegal){
+
+                legalEnPassants.add(enPassant);
+
+            }
+
+            //Reset board
+            try{
+                board = (BoardRepresentation) lastBoard.clone();
+            }catch(CloneNotSupportedException e){
+    
+            }
+        }
+
+        //Castles
+        legalCastles = new ArrayList<Castle>();
+
+        for(Castle castle: castleTester){
+
+            //Start by assuming the castle is legal
+            boolean moveLegal = true;
+
+            board.switchTurn();
+
+            //For each returning opponent move
+            for(Move opMove : generateMoves()){
+
+                //if the move would bring opponent piece to square the king is castling through the castle is illegal
+                if(board.squares[opMove.getTargetSquare()] >= castle.getKingStartSquare() && board.squares[opMove.getTargetSquare()] < castle.getKingStartSquare()){
+
+                    //Set move legality to false
+                    moveLegal = false;
+                    
+                }
+                //if the move would bring opponent piece to square the king is castling through the castle is illegal
+                if(board.squares[opMove.getTargetSquare()] <= castle.getKingStartSquare() && board.squares[opMove.getTargetSquare()] > castle.getKingStartSquare()){
+
+                    //Set move legality to false
+                    moveLegal = false;
+
+                }
+            }
+
+            //Add legal enpassant to legal enpassants
+            if(moveLegal){
+                legalCastles.add(castle);
+            }
+            //Reset board
+            board.switchTurn();
+        }
+
     }
 
     public ArrayList<Move> generateMoves () {
@@ -288,10 +437,6 @@ public class MoveGeneration {
                 }
             }
 
-            
-
-
-
         }
 
         //Black Pawns
@@ -351,7 +496,7 @@ public class MoveGeneration {
 
     }
 
-    public void doMove(Move move){
+    public void playMove(Move move){
 
         //Fullmove clock
         if(board.colourToMove == false){ //Black's turn
@@ -364,6 +509,41 @@ public class MoveGeneration {
             board.halfMoveClock = 0;
         }
         
+        doMove(move);
+    }
+
+    public void playEnPassant(EnPassant enPassant){
+
+        //Fullmove clock
+        if(board.colourToMove == false){ //Black's turn
+            board.fullMoveClock = board.fullMoveClock + 1;
+        }
+        //Halfmove clock
+        board.halfMoveClock = 0;
+        
+        doEnPassant(enPassant);
+
+    }
+
+    public void playCastle(Castle castle){
+        //Fullmove clock
+        if(board.colourToMove == false){ //Black's turn
+            board.fullMoveClock = board.fullMoveClock + 1;
+        }
+        //Halfmove clock
+        board.halfMoveClock = board.halfMoveClock+1;
+        
+        doCastle(castle);
+    }
+
+    private void doMove(Move move) {
+
+        try{
+            lastBoard = (BoardRepresentation) board.clone();
+        }catch(CloneNotSupportedException e){
+
+        }
+        
         //Change value of target square and reset starting square
         board.squares[move.getTargetSquare()] = move.getNewPiece();
         board.squares[move.getStartSquare()] = 0;
@@ -374,15 +554,14 @@ public class MoveGeneration {
 
     }
 
-    public void doEnPassant(EnPassant enPassant) {
+    private void doEnPassant(EnPassant enPassant) {
 
-        //Fullmove clock
-        if(board.colourToMove == false){ //Black's turn
-            board.fullMoveClock = board.fullMoveClock + 1;
+        try{
+            lastBoard = (BoardRepresentation) board.clone();
+        }catch(CloneNotSupportedException e){
+
         }
-        //Halfmove clock
-        board.halfMoveClock = 0;
-        
+
         //Change value of target square and reset starting square
         board.squares[enPassant.getTargetSquare()] = board.squares[enPassant.getStartSquare()];
         board.squares[enPassant.getStartSquare()] = 0;
@@ -394,13 +573,13 @@ public class MoveGeneration {
 
     }
 
-    public void doCastle(Castle castle) {
-        //Fullmove clock
-        if(board.colourToMove == false){ //Black's turn
-            board.fullMoveClock = board.fullMoveClock + 1;
+    private void doCastle(Castle castle) {
+
+        try{
+            lastBoard = (BoardRepresentation) board.clone();
+        }catch(CloneNotSupportedException e){
+
         }
-        //Halfmove clock
-        board.halfMoveClock = board.halfMoveClock+1;
         
         //Change value of target square and reset starting square
         board.squares[castle.getRookEndSquare()] = board.squares[castle.getRookStartSquare()];
@@ -416,7 +595,7 @@ public class MoveGeneration {
 
     private static boolean castleLegalityCheck(BoardRepresentation board, Castle castle){ //Checks if castle goes through pieces or checks
         
-        //Checking if there are peices between king and rook
+        //Checking if there are pieces between king and rook
 
         if(castle.getKingStartSquare()> castle.getRookStartSquare()){
             for(int i = 1; i< castle.getKingStartSquare(); i++){
@@ -428,7 +607,7 @@ public class MoveGeneration {
 
         if(castle.getKingStartSquare() < castle.getRookStartSquare()){
             for(int i = castle.getKingStartSquare(); i< castle.getRookStartSquare(); i++){
-                if(!Piece.isType(board.squares[castle.getKingStartSquare()+i], Piece.none)){
+                if(!Piece.isType(board.squares[i], Piece.none)){
                     return false;
                 }
             }
@@ -436,7 +615,6 @@ public class MoveGeneration {
 
         return true;
 
-
     }
-    
+
 }
