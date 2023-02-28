@@ -1,4 +1,4 @@
-public class EnPassant {
+public class EnPassant extends Movement{
 
     //Structure for movements
     private int startSquare;

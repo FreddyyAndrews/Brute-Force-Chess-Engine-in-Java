@@ -1,8 +1,9 @@
-public class Move {
+public class Move extends Movement{
     //Structure for movements
     private int startSquare;
     private int targetSquare;
     private int newPiece;
+    public boolean promotion;
     
     
     //Regular move
@@ -10,6 +11,16 @@ public class Move {
         this.startSquare = startSquare;
         this.targetSquare = targetSquare;
         this.newPiece = newPiece;
+        this.promotion = false;
+        
+    }
+
+    //Promotion
+    public Move (int startSquare, int targetSquare, int newPiece, boolean promotion) {
+        this.startSquare = startSquare;
+        this.targetSquare = targetSquare;
+        this.newPiece = newPiece;
+        this.promotion = promotion;
         
     }
     

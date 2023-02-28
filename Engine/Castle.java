@@ -1,4 +1,4 @@
-public class Castle {
+public class Castle extends Movement {
 
     //Structure for Castling
     private int kingstartSquare;

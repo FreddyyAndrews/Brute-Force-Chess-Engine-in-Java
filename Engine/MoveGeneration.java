@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Arrays;
 
 
 public class MoveGeneration  {
@@ -9,7 +10,7 @@ public class MoveGeneration  {
     //Instance Variables
     PrecomputedMoveData dataFinder;
     BoardRepresentation board;
-    BoardRepresentation lastBoard;
+    
     private int[][] numSquaresToEdge; 
     //Moves
     private ArrayList<Move> moves; 
@@ -19,6 +20,8 @@ public class MoveGeneration  {
     private ArrayList<Move> legalMoves; 
     private ArrayList<EnPassant> legalEnPassants;
     private ArrayList<Castle> legalCastles;
+    //Save last piece captured
+    private int lastPieceCaptured;
 
     
 
@@ -27,7 +30,6 @@ public class MoveGeneration  {
 
         this.dataFinder = dataFinder;
         this.board = board;
-        this.lastBoard = board;
         numSquaresToEdge = dataFinder.numSquaresToEdge;
 
     }
@@ -52,8 +54,6 @@ public class MoveGeneration  {
         return legalMoves;
     }
 
-
-
     //Generate legal moves and filter out moves that put king in check
     public void generateLegalMoves (){
         
@@ -64,16 +64,16 @@ public class MoveGeneration  {
 
         //Regular moves
         legalMoves = new ArrayList<Move>();
-
+        boolean moveDone = false;
         //For ever move generated
         for(Move move : moveTester){
 
             //Start by assuming the move is legal
             boolean moveLegal = true;
-
+            
             //Do the move do get the next position
             doMove(move); //b
-
+            moveDone = true;
             //For each returning opponent move
             for(Move opMove : generateMoves()){//b
 
@@ -95,18 +95,16 @@ public class MoveGeneration  {
             }
 
             //Reset board
-            try{
-                board = (BoardRepresentation) lastBoard.clone();
-            }catch(CloneNotSupportedException e){
-    
+            if(moveDone){
+                undoMove(move);
             }
-
+            
         }
-
+ 
         //EnPassants
 
         legalEnPassants = new ArrayList<EnPassant>();
-
+        moveDone = false;
         for(EnPassant enPassant : enPassantTester){
 
             //Start by assuming the enpassant is legal
@@ -114,7 +112,7 @@ public class MoveGeneration  {
 
             //Do the move do get the next position
             doEnPassant(enPassant);
-
+            moveDone = true;
             //For each returning opponent move
             for(Move opMove : generateMoves()){
 
@@ -135,23 +133,22 @@ public class MoveGeneration  {
             }
 
             //Reset board
-            try{
-                board = (BoardRepresentation) lastBoard.clone();
-            }catch(CloneNotSupportedException e){
-    
+
+            if(moveDone){
+                undoMove(enPassant);
             }
         }
 
         //Castles
         legalCastles = new ArrayList<Castle>();
-
+        moveDone = false;
         for(Castle castle: castleTester){
 
             //Start by assuming the castle is legal
             boolean moveLegal = true;
 
             board.switchTurn();
-
+            moveDone = true;
             //For each returning opponent move
             for(Move opMove : generateMoves()){
 
@@ -171,14 +168,18 @@ public class MoveGeneration  {
                 }
             }
 
-            //Add legal enpassant to legal enpassants
+            //Add legal castle to legal enpassants
             if(moveLegal){
                 legalCastles.add(castle);
             }
-            //Reset board
-            board.switchTurn();
-        }
 
+            if(moveDone){
+                //Reset board
+                board.switchTurn();
+            }
+            
+        }
+ 
     }
 
     public ArrayList<Move> generateMoves () {
@@ -379,6 +380,7 @@ public class MoveGeneration  {
     }
 
     private void generatePawnMoves(int startSquare) {
+
         //White pawns
         if(board.colourToMove == true){
 
@@ -510,6 +512,7 @@ public class MoveGeneration  {
         }
         
         doMove(move);
+        board.proccessCastlingRequirements();
     }
 
     public void playEnPassant(EnPassant enPassant){
@@ -522,6 +525,7 @@ public class MoveGeneration  {
         board.halfMoveClock = 0;
         
         doEnPassant(enPassant);
+        board.proccessCastlingRequirements();
 
     }
 
@@ -534,21 +538,18 @@ public class MoveGeneration  {
         board.halfMoveClock = board.halfMoveClock+1;
         
         doCastle(castle);
+        board.proccessCastlingRequirements();
     }
 
     private void doMove(Move move) {
 
-        try{
-            lastBoard = (BoardRepresentation) board.clone();
-        }catch(CloneNotSupportedException e){
-
-        }
-        
+    
         //Change value of target square and reset starting square
+        lastPieceCaptured = board.squares[move.getTargetSquare()];
         board.squares[move.getTargetSquare()] = move.getNewPiece();
         board.squares[move.getStartSquare()] = 0;
 
-        board.proccessCastlingRequirements();
+        
         
         board.switchTurn();
 
@@ -556,18 +557,12 @@ public class MoveGeneration  {
 
     private void doEnPassant(EnPassant enPassant) {
 
-        try{
-            lastBoard = (BoardRepresentation) board.clone();
-        }catch(CloneNotSupportedException e){
-
-        }
-
+        
         //Change value of target square and reset starting square
         board.squares[enPassant.getTargetSquare()] = board.squares[enPassant.getStartSquare()];
         board.squares[enPassant.getStartSquare()] = 0;
         board.squares[enPassant.getTargetPieceSquare()] = 0;
 
-        board.proccessCastlingRequirements();
         
         board.switchTurn();
 
@@ -575,11 +570,6 @@ public class MoveGeneration  {
 
     private void doCastle(Castle castle) {
 
-        try{
-            lastBoard = (BoardRepresentation) board.clone();
-        }catch(CloneNotSupportedException e){
-
-        }
         
         //Change value of target square and reset starting square
         board.squares[castle.getRookEndSquare()] = board.squares[castle.getRookStartSquare()];
@@ -588,7 +578,7 @@ public class MoveGeneration  {
         board.squares[castle.getKingStartSquare()] = 0;
         board.squares[castle.getRookStartSquare()] = 0;
 
-        board.proccessCastlingRequirements();
+        
         
         board.switchTurn();
     }
@@ -614,6 +604,51 @@ public class MoveGeneration  {
         }
 
         return true;
+
+    }
+
+    private void undoMove(Movement play) {
+
+        if(play instanceof Move){
+
+            Move move = (Move) play;
+            
+            if(!move.promotion){
+
+                board.squares[move.getStartSquare()] = board.squares[move.getTargetSquare()];
+                board.squares[move.getTargetSquare()] = lastPieceCaptured;
+
+            }
+            if(move.promotion){
+                if(Piece.isWhite(board.squares[move.getTargetSquare()])){
+                    board.squares[move.getStartSquare()] = Piece.pawn +Piece.white;
+                    board.squares[move.getTargetSquare()] = 0;
+                }else{
+                    board.squares[move.getStartSquare()] = Piece.pawn +Piece.black;
+                    board.squares[move.getTargetSquare()] = 0;
+                }
+            }
+            
+            board.switchTurn(); 
+
+        }else if(play instanceof EnPassant){
+
+            EnPassant enPassant = (EnPassant) play;
+
+            if(Piece.isWhite(board.squares[enPassant.getTargetSquare()])){
+                board.squares[enPassant.getTargetSquare()] = 0;
+                board.squares[enPassant.getStartSquare()] = Piece.pawn + Piece.white;
+                board.squares[enPassant.getTargetPieceSquare()] = Piece.pawn + Piece.black;
+            }else{
+                board.squares[enPassant.getTargetSquare()] = 0;
+                board.squares[enPassant.getStartSquare()] = Piece.pawn + Piece.black;
+                board.squares[enPassant.getTargetPieceSquare()] = Piece.pawn + Piece.white;
+            }
+            
+
+        }else if(play instanceof Castle){
+
+        }
 
     }
 

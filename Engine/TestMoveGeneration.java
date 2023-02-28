@@ -8,7 +8,7 @@ public class TestMoveGeneration {
 
         PrecomputedMoveData dataFinder = new PrecomputedMoveData();
 
-        BoardRepresentation board = new BoardRepresentation("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+        BoardRepresentation board = new BoardRepresentation("3qk3/8/8/8/8/8/8/4K3 w - - 0 1");
         
         MoveGeneration moveGenerator = new MoveGeneration(dataFinder,board);
         
@@ -46,7 +46,7 @@ public class TestMoveGeneration {
 
         PrecomputedMoveData dataFinder = new PrecomputedMoveData();
 
-        BoardRepresentation board = new BoardRepresentation("3qk3/8/8/8/8/8/8/4K3 w - - 0 1");
+        BoardRepresentation board = new BoardRepresentation("8/8/3rkr2/8/8/4K3/r7/8 w - - 0 1");
         
         MoveGeneration moveGenerator = new MoveGeneration(dataFinder,board);
         
@@ -135,6 +135,27 @@ public class TestMoveGeneration {
         System.out.println(board.getFenString());
 
     }
+
+    public static void testLegalMoveGenerationStability(){
+
+        PrecomputedMoveData dataFinder = new PrecomputedMoveData();
+
+        BoardRepresentation board = new BoardRepresentation("3qk3/8/8/8/8/8/8/4K3 w - - 0 1");
+        
+        MoveGeneration moveGenerator = new MoveGeneration(dataFinder,board);
+        
+        moveGenerator.generateLegalMoves();
+
+        BoardRepresentation boardCompare = new BoardRepresentation("3qk3/8/8/8/8/8/8/4K3 w - - 0 1");
+
+        for(int i = 0; i<board.squares.length; i++){
+            if(board.squares[i] != boardCompare.squares[i]){
+                System.out.println("Difference at : " + i);
+            }
+        }
+
+        
+    }
     
     public static void main(String[] args){
         //generateRandomMoves();
@@ -142,6 +163,7 @@ public class TestMoveGeneration {
         //testEnPassant();
         //testCastling();
         testLegalMoveGeneration();
+        testLegalMoveGenerationStability();
 
     }
     
