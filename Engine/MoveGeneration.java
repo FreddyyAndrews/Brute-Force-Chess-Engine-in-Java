@@ -1,6 +1,4 @@
 import java.util.ArrayList;
-import java.util.Arrays;
-
 
 public class MoveGeneration  {
 
@@ -22,8 +20,6 @@ public class MoveGeneration  {
     private ArrayList<Castle> legalCastles;
     //Save last piece captured
     private int lastPieceCaptured;
-
-    
 
     //Constructor
     public MoveGeneration( PrecomputedMoveData dataFinder, BoardRepresentation board){
@@ -140,43 +136,44 @@ public class MoveGeneration  {
         }
 
         //Castles
+
         legalCastles = new ArrayList<Castle>();
         moveDone = false;
         for(Castle castle: castleTester){
 
             //Start by assuming the castle is legal
             boolean moveLegal = true;
-
+            //Switch turn to generate opponent moves
             board.switchTurn();
-            moveDone = true;
+            
             //For each returning opponent move
             for(Move opMove : generateMoves()){
 
                 //if the move would bring opponent piece to square the king is castling through the castle is illegal
-                if(board.squares[opMove.getTargetSquare()] >= castle.getKingStartSquare() && board.squares[opMove.getTargetSquare()] < castle.getKingStartSquare()){
+                //Doesn't recognize issue here
+                if(board.squares[opMove.getTargetSquare()] >= castle.getKingStartSquare() && board.squares[opMove.getTargetSquare()] <= castle.getKingEndSquare()){
 
                     //Set move legality to false
                     moveLegal = false;
                     
                 }
                 //if the move would bring opponent piece to square the king is castling through the castle is illegal
-                if(board.squares[opMove.getTargetSquare()] <= castle.getKingStartSquare() && board.squares[opMove.getTargetSquare()] > castle.getKingStartSquare()){
+                //Doesn't recognize issue here
+                if(board.squares[opMove.getTargetSquare()] <= castle.getKingStartSquare() && board.squares[opMove.getTargetSquare()] >= castle.getKingEndSquare()){
 
                     //Set move legality to false
                     moveLegal = false;
 
                 }
+                
             }
 
             //Add legal castle to legal enpassants
             if(moveLegal){
                 legalCastles.add(castle);
             }
-
-            if(moveDone){
-                //Reset board
-                board.switchTurn();
-            }
+            
+            board.switchTurn();
             
         }
  
@@ -596,7 +593,7 @@ public class MoveGeneration  {
         }
 
         if(castle.getKingStartSquare() < castle.getRookStartSquare()){
-            for(int i = castle.getKingStartSquare(); i< castle.getRookStartSquare(); i++){
+            for(int i = castle.getKingStartSquare() + 1; i< castle.getRookStartSquare(); i++){
                 if(!Piece.isType(board.squares[i], Piece.none)){
                     return false;
                 }

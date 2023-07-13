@@ -21,6 +21,7 @@ public class TestBoardRepresentation {
     }
 
     public static void main(String[] args){
+        
         testFenStringLoading();
         testFenStringGenerating();
         

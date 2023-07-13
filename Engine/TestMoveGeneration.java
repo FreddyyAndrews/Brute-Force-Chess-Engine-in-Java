@@ -42,11 +42,11 @@ public class TestMoveGeneration {
 
     }
 
-    private static void testLegalMoveGeneration(){
+    private static void testLegalMoveGeneration(String fen){
 
         PrecomputedMoveData dataFinder = new PrecomputedMoveData();
 
-        BoardRepresentation board = new BoardRepresentation("8/8/3rkr2/8/8/4K3/r7/8 w - - 0 1");
+        BoardRepresentation board = new BoardRepresentation(fen);
         
         MoveGeneration moveGenerator = new MoveGeneration(dataFinder,board);
         
@@ -57,7 +57,19 @@ public class TestMoveGeneration {
         for(Move move: moves){
             System.out.println(Move.toString(move));
         }
-        System.out.println(moves.size());
+
+        for(EnPassant enPassant: moveGenerator.getLegalEnPassants()){
+            System.out.println(EnPassant.toString(enPassant));
+        }
+
+        for(Castle castle : moveGenerator.getCastles()){
+            System.out.println(Castle.toString(castle));
+        }
+
+
+        System.out.println(moves.size() + moveGenerator.getLegalEnPassants().size() + moveGenerator.getCastles().size() );
+
+        testLegalMoveGenerationStability(fen);
 
     }
 
@@ -112,11 +124,11 @@ public class TestMoveGeneration {
 
     }
 
-    private static void testCastling(){
+    private static void testCastling(String fen){
 
         PrecomputedMoveData dataFinder = new PrecomputedMoveData();
 
-        BoardRepresentation board = new BoardRepresentation("8/8/8/8/8/8/8/R1B1K2R w KQkq - 0 1");
+        BoardRepresentation board = new BoardRepresentation(fen);
         
         MoveGeneration moveGenerator = new MoveGeneration(dataFinder,board);
 
@@ -136,17 +148,17 @@ public class TestMoveGeneration {
 
     }
 
-    public static void testLegalMoveGenerationStability(){
+    public static void testLegalMoveGenerationStability(String fen){
 
         PrecomputedMoveData dataFinder = new PrecomputedMoveData();
 
-        BoardRepresentation board = new BoardRepresentation("3qk3/8/8/8/8/8/8/4K3 w - - 0 1");
+        BoardRepresentation board = new BoardRepresentation(fen);
         
         MoveGeneration moveGenerator = new MoveGeneration(dataFinder,board);
         
         moveGenerator.generateLegalMoves();
 
-        BoardRepresentation boardCompare = new BoardRepresentation("3qk3/8/8/8/8/8/8/4K3 w - - 0 1");
+        BoardRepresentation boardCompare = new BoardRepresentation(fen);
 
         for(int i = 0; i<board.squares.length; i++){
             if(board.squares[i] != boardCompare.squares[i]){
@@ -154,16 +166,32 @@ public class TestMoveGeneration {
             }
         }
 
+    } 
+
+    public static void testLegalCastles(String fen) {
+
+        PrecomputedMoveData dataFinder = new PrecomputedMoveData();
+
+        BoardRepresentation board = new BoardRepresentation(fen);
         
+        MoveGeneration moveGenerator = new MoveGeneration(dataFinder,board);
+        
+        moveGenerator.generateLegalMoves();
+
+        for(Castle castle: moveGenerator.getLegalCastles()){
+            System.out.println(Castle.toString(castle));
+        }
     }
     
     public static void main(String[] args){
+
         //generateRandomMoves();
         //testPawnPromotions();
         //testEnPassant();
-        //testCastling();
-        testLegalMoveGeneration();
-        testLegalMoveGenerationStability();
+        //testCastling("4k1n1/8/8/8/8/8/8/R3K2R w KQ - 0 1");
+        //testLegalMoveGeneration("4k1n1/8/8/8/8/8/8/R3K2R w KQ - 0 1");
+        testLegalCastles("6q1/5k2/8/8/8/8/8/R3K2R w KQ - 0 1");
+        
 
     }
     
